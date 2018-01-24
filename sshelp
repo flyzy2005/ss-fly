@@ -7,3 +7,5 @@
         ss-fly.sh [-h|h|help]
     一键安装:
         ss-fly.sh -i|i|install
+    安装BBR加速：
+        ss-fly.sh -bbr
