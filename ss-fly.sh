@@ -42,7 +42,13 @@ install() {
 	pip install shadowsocks
 	chmod 755 /etc/shadowsocks.json
 	apt-get install python-m2crypto
-	ssserver -c /etc/shadowsocks.json -d start
+	ps -fe|grep ssserver |grep -v grep
+        if [ $? -ne 0 ]
+        then
+          ssserver -c /etc/shadowsocks.json -d start
+        else
+          ssserver -c /etc/shadowsocks.json -d restart
+        fi
 	rclocal=`cat /etc/rc.local`
         if [[ $rclocal != *'ssserver -c /etc/shadowsocks.json -d start'* ]]
         then
