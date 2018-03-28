@@ -58,36 +58,35 @@ install() {
 }
 
 install_bbr() {
-i=`uname -r | cut -f 2 -d .`
-if [ $i -le 9 ]
-then
-    if
-        echo '准备下载镜像文件...' && wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.2/linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb
-
-    then
-        echo '镜像文件下载成功，开始安装...' && dpkg -i linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb && update-grub && echo '镜像安装成功，准备重启...' && reboot
-    else
-        echo '下载内核文件失败，请重新执行安装BBR命令'
-        exit 1
-    fi
-fi
-sysfile=`cat /etc/sysctl.conf`
-if [[ $sysfile != *'net.core.default_qdisc=fq'* ]]
-then
-    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-fi
-if [[ $sysfile != *'net.ipv4.tcp_congestion_control=bbr'* ]]
-then
-    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-fi
-sysctl -p > /dev/null
-result=`sysctl net.ipv4.tcp_available_congestion_control`
-if [[ $result == *'bbr'* ]]
-then
-    echo 'BBR开启成功'
-else 
-    echo 'BBR开启失败，请重试'
-fi
+	sysfile=`cat /etc/sysctl.conf`
+	if [[ $sysfile != *'net.core.default_qdisc=fq'* ]]
+	then
+    		echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+	fi
+	if [[ $sysfile != *'net.ipv4.tcp_congestion_control=bbr'* ]]
+	then
+    		echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+	fi
+	sysctl -p > /dev/null
+	i=`uname -r | cut -f 2 -d .`
+	if [ $i -le 9 ]
+	then
+    		if
+        	echo '准备下载镜像文件...' && wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.2/linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb
+    		then
+        		echo '镜像文件下载成功，开始安装...' && dpkg -i linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb && update-grub && echo '镜像安装成功，系统即将重启，重启后bbr将成功开启...' && reboot
+    		else
+        		echo '下载内核文件失败，请重新执行安装BBR命令'
+        		exit 1
+    		fi
+	fi
+	result=`sysctl net.ipv4.tcp_available_congestion_control`
+	if [[ $result == *'bbr'* ]]
+	then
+    		echo 'BBR已开启成功'
+	else 
+    		echo 'BBR开启失败，请重试'
+	fi
 }
 
 if [ "$#" -eq 0 ]; then
