@@ -42,7 +42,7 @@ install() {
 	pip install shadowsocks
 	chmod 755 /etc/shadowsocks.json
 	apt-get install python-m2crypto
-	ps -fe|grep ssserver |grep -v grep
+	ps -fe|grep ssserver |grep -v grep > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
           ssserver -c /etc/shadowsocks.json -d start
@@ -54,7 +54,9 @@ install() {
         then
           sed -i '$i\ssserver -c /etc/shadowsocks.json -d start'  /etc/rc.local
         fi
-	echo '安装成功~尽情冲浪吧'
+	echo "安装成功~尽情冲浪吧
+您的配置文件内容如下（server在客户端中需要配置成你VPS的IP）："
+	cat /etc/shadowsocks.json
 }
 
 install_bbr() {
@@ -95,6 +97,18 @@ install_ssr() {
 	./shadowsocksR.sh 2>&1 | tee shadowsocksR.log
 }
 
+uninstall_ss() {
+	ps -fe|grep ssserver |grep -v grep > /dev/null 2>&1
+        if [ $? -eq 0 ]
+        then
+          ssserver -c /etc/shadowsocks.json -d stop
+        fi
+	pip uninstall -y shadowsocks
+	rm /etc/shadowsocks.json
+	rm /var/log/shadowsocks.log
+	echo 'shadowsocks卸载成功'
+}
+
 if [ "$#" -eq 0 ]; then
 	usage
 	exit 0
@@ -126,6 +140,9 @@ case $1 in
         -ssr )
         install_ssr
                 ;;
+	-uninstall )
+	uninstall_ss
+		;;
 	* )
 		usage
 		;;
