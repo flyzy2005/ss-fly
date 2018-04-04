@@ -89,6 +89,12 @@ install_bbr() {
 	fi
 }
 
+install_ssr() {
+	wget --no-check-certificate https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocksR.sh
+	chmod +x shadowsocksR.sh
+	./shadowsocksR.sh 2>&1 | tee shadowsocksR.log
+}
+
 if [ "$#" -eq 0 ]; then
 	usage
 	exit 0
@@ -116,6 +122,9 @@ case $1 in
 		;;
         -bbr )
         install_bbr
+                ;;
+        -ssr )
+        install_ssr
                 ;;
 	* )
 		usage
