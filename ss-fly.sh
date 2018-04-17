@@ -42,6 +42,7 @@ install() {
 	pip install shadowsocks
 	chmod 755 /etc/shadowsocks.json
 	apt-get install python-m2crypto
+        command -v ssserver >/dev/null 2>&1 || { echo >&2 "请确保你服务器（服务器，不是你自己的电脑）的系统是Ubuntu。如果系统是Ubuntu，似乎因为网络原因ss没有安装成功，请再执行一次搭建ss脚本代码。如果试了几次还是不行，执行reboot命令重启下服务器之后再试下，如果还是不行，请联系flyzy小站。"; exit 1; }
 	ps -fe|grep ssserver |grep -v grep > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
