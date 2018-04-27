@@ -128,7 +128,7 @@ install_bbr() {
 		wget ${kernel_ubuntu_url}
 		if [ $? -ne 0 ]
 		then
-			echo -e "[${red}错误${plain}] 下载${deb_kernel_name}失败，请自行检查。"
+			echo -e "[${red}错误${plain}] 下载内核失败，请自行检查。"
 			exit 1
 		fi
 		dpkg -i ${kernel_ubuntu_file}

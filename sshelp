@@ -1,5 +1,5 @@
 声明：
-    一键脚本在Ubuntu16.04搭建ss/ssr服务
+    一键脚本搭建ss/ssr服务+开启bbr加速
 用法：
     显示版本：
         ss-fly.sh -v|v|version
