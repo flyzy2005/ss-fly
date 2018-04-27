@@ -14,6 +14,9 @@ libsodium_url="https://github.com/jedisct1/libsodium/releases/download/1.0.16/li
 
 fly_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+kernel_ubuntu_url="http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.2/linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb"
+kernel_ubuntu_file="linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb"
+
 usage () {
         cat $fly_dir/sshelp
 }
@@ -87,35 +90,56 @@ uninstall_ss() {
 }
 
 install_bbr() {
-	sysfile=`cat /etc/sysctl.conf`
-	if [[ $sysfile != *'net.core.default_qdisc=fq'* ]]
+	[[ -d "/proc/vz" ]] && echo -e "[${red}错误${plain}] 你的系统是OpenVZ架构的，不支持开启BBR。" && exit 1
+	check_os
+	check_bbr_status
+	if [ $? -eq 0 ]
 	then
-    		echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+		echo -e "[${green}提示${plain}] TCP BBR加速已经开启成功。"
+		exit 0
 	fi
-	if [[ $sysfile != *'net.ipv4.tcp_congestion_control=bbr'* ]]
+	check_kernel_version
+	if [ $? -eq 0 ]
 	then
-    		echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+		echo -e "[${green}提示${plain}] 你的系统版本高于4.9，直接开启BBR加速。"
+		sysctl_config
+		echo -e "[${green}提示${plain}] TCP BBR加速开启成功"
+		exit 0
 	fi
-	sysctl -p > /dev/null
-	i=`uname -r | cut -f 2 -d .`
-	if [ $i -le 9 ]
-	then
-    		if
-        	echo '准备下载镜像文件...' && wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.2/linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb
-    		then
-        		echo '镜像文件下载成功，开始安装...' && dpkg -i linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb && update-grub && echo '镜像安装成功，系统即将重启，重启后bbr将成功开启...' && reboot
-    		else
-        		echo '下载内核文件失败，请重新执行安装BBR命令'
-        		exit 1
-    		fi
-	fi
-	result=`sysctl net.ipv4.tcp_available_congestion_control`
-	if [[ $result == *'bbr'* ]]
-	then
-    		echo 'BBR已开启成功'
-	else 
-    		echo 'BBR开启失败，请重试'
-	fi
+	    
+	if [[ x"${os}" == x"centos" ]]; then
+        	install_elrepo
+        	yum --enablerepo=elrepo-kernel -y install kernel-ml kernel-ml-devel
+        	if [ $? -ne 0 ]; then
+            		echo -e "[${red}错误${plain}] 安装内核失败，请自行检查。"
+            		exit 1
+        	fi
+    	elif [[ x"${os}" == x"debian" || x"${os}" == x"ubuntu" ]]; then
+        	[[ ! -e "/usr/bin/wget" ]] && apt-get -y update && apt-get -y install wget
+        	#get_latest_version
+        	#[ $? -ne 0 ] && echo -e "[${red}错误${plain}] 获取最新内核版本失败，请检查网络" && exit 1
+       		 #wget -c -t3 -T60 -O ${deb_kernel_name} ${deb_kernel_url}
+        	#if [ $? -ne 0 ]; then
+            	#	echo -e "[${red}错误${plain}] 下载${deb_kernel_name}失败，请自行检查。"
+            	#	exit 1
+       		#fi
+        	#dpkg -i ${deb_kernel_name}
+        	#rm -fv ${deb_kernel_name}
+		wget ${kernel_ubuntu_url}
+		if [ $? -ne 0 ]
+		then
+			echo -e "[${red}错误${plain}] 下载${deb_kernel_name}失败，请自行检查。"
+			exit 1
+		fi
+		dpkg -i ${kernel_ubuntu_file}
+    	else
+       	 	echo -e "[${red}错误${plain}] 脚本不支持该操作系统，请修改系统为CentOS/Debian/Ubuntu。"
+        	exit 1
+    	fi
+
+    	install_config
+    	sysctl_config
+    	reboot_os
 }
 
 install_ssr() {
@@ -135,11 +159,91 @@ check_os() {
                 os='centos'
                 ;;
                 *)
-                echo -e "[${red}错误${plain}] 本脚本暂时只支持Centos和Ubuntu系统，如需用本脚本，请先修改你的系统类型"
+                echo -e "[${red}错误${plain}] 本脚本暂时只支持Centos/Ubuntu/Debian系统，如需用本脚本，请先修改你的系统类型"
                 exit 1
                 ;;
         esac
 }
+
+check_bbr_status() {
+    local param=$(sysctl net.ipv4.tcp_available_congestion_control | awk '{print $3}')
+    if [[ x"${param}" == x"bbr" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+version_ge(){
+    test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"
+}
+
+check_kernel_version() {
+    local kernel_version=$(uname -r | cut -d- -f1)
+    if version_ge ${kernel_version} 4.9; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+sysctl_config() {
+    sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
+    sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
+    echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
+    echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
+    sysctl -p >/dev/null 2>&1
+}
+
+install_elrepo() {
+    if centosversion 5; then
+        echo -e "[${red}错误${plain}] 脚本不支持CentOS 5。"
+        exit 1
+    fi
+
+    rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+
+    if centosversion 6; then
+        rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm
+    elif centosversion 7; then
+        rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+    fi
+
+    if [ ! -f /etc/yum.repos.d/elrepo.repo ]; then
+        echo -e "[${red}错误${plain}] 安装elrepo失败，请自行检查。"
+        exit 1
+    fi
+}
+
+get_latest_version() {
+
+    latest_version=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)
+
+    [ -z ${latest_version} ] && return 1
+
+    if [[ `getconf WORD_BIT` == "32" && `getconf LONG_BIT` == "64" ]]; then
+        deb_name=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${latest_version}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
+        deb_kernel_url="http://kernel.ubuntu.com/~kernel-ppa/mainline/v${latest_version}/${deb_name}"
+        deb_kernel_name="linux-image-${latest_version}-amd64.deb"
+    else
+        deb_name=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${latest_version}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)
+        deb_kernel_url="http://kernel.ubuntu.com/~kernel-ppa/mainline/v${latest_version}/${deb_name}"
+        deb_kernel_name="linux-image-${latest_version}-i386.deb"
+    fi
+
+    [ ! -z ${deb_name} ] && return 0 || return 1
+}
+
+get_opsy() {
+    [ -f /etc/redhat-release ] && awk '{print ($1,$3~/^[0-9]/?$3:$4)}' /etc/redhat-release && return
+    [ -f /etc/os-release ] && awk -F'[= "]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release && return
+    [ -f /etc/lsb-release ] && awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release && return
+}
+
+opsy=$( get_opsy )
+arch=$( uname -m )
+lbit=$( getconf LONG_BIT )
+kern=$( uname -r )
 
 check_dependency() {
         case $os in
@@ -150,6 +254,38 @@ check_dependency() {
                 'centos')
                 yum install -y python python-devel python-setuptools openssl openssl-devel curl wget unzip gcc automake autoconf make libtool
         esac
+}
+
+install_config() {
+    if [[ x"${os}" == x"centos" ]]; then
+        if centosversion 6; then
+            if [ ! -f "/boot/grub/grub.conf" ]; then
+                echo -e "[${red}错误${plain}] 没有找到/boot/grub/grub.conf文件。"
+                exit 1
+            fi
+            sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
+        elif centosversion 7; then
+            if [ ! -f "/boot/grub2/grub.cfg" ]; then
+                echo -e "[${red}错误${plain}] 没有找到/boot/grub2/grub.cfg文件。"
+                exit 1
+            fi
+            grub2-set-default 0
+        fi
+    elif [[ x"${os}" == x"debian" || x"${os}" == x"ubuntu" ]]; then
+        /usr/sbin/update-grub
+    fi
+}
+
+reboot_os() {
+    echo
+    echo -e "[${green}提示${plain}] 系统需要重启BBR才能生效。"
+    read -p "是否立马重启 [y/n]" is_reboot
+    if [[ ${is_reboot} == "y" || ${is_reboot} == "Y" ]]; then
+        reboot
+    else
+        echo -e "[${green}提示${plain}] 取消重启。其自行执行reboot命令。"
+        exit 0
+    fi
 }
 
 download_files() {
