@@ -69,7 +69,7 @@ uninstall_ss() {
                         ssserver -c /etc/shadowsocks.json -d stop
                 fi
                 case $os in
-                        'ubuntu')
+                        'ubuntu'|'debian')
                                 update-rc.d -f ss-fly remove
                                 ;;
                         'centos')
@@ -148,7 +148,7 @@ install_ssr() {
 	./shadowsocksR.sh 2>&1 | tee shadowsocksR.log
 }
 
-check_os() {
+check_os_() {
         source /etc/os-release
 	local os_tmp=$(echo $ID | tr [A-Z] [a-z])
         case $os_tmp in
@@ -163,6 +163,24 @@ check_os() {
                 exit 1
                 ;;
         esac
+}
+
+check_os() {
+    if [[ -f /etc/redhat-release ]]; then
+        os="centos"
+    elif cat /etc/issue | grep -Eqi "debian"; then
+        os="debian"
+    elif cat /etc/issue | grep -Eqi "ubuntu"; then
+        os="ubuntu"
+    elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
+        os="centos"
+    elif cat /proc/version | grep -Eqi "debian"; then
+        os="debian"
+    elif cat /proc/version | grep -Eqi "ubuntu"; then
+        os="ubuntu"
+    elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
+        os="centos"
+    fi
 }
 
 check_bbr_status() {
@@ -247,7 +265,7 @@ kern=$( uname -r )
 
 check_dependency() {
         case $os in
-                'ubuntu')
+                'ubuntu'|'debian')
                 apt-get -y update
                 apt-get -y install python python-dev python-setuptools openssl libssl-dev curl wget unzip gcc automake autoconf make libtool
                 ;;
@@ -401,7 +419,7 @@ install() {
                 cp $fly_dir/ss-fly /etc/init.d/
                 chmod +x /etc/init.d/ss-fly
                 case $os in
-                        'ubuntu')
+                        'ubuntu'|'debian')
                                 update-rc.d ss-fly defaults
                                 ;;
                         'centos')
