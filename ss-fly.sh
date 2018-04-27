@@ -126,8 +126,9 @@ install_ssr() {
 
 check_os() {
         source /etc/os-release
-        case $ID in
-                ubuntu)
+	local os_tmp=$(echo $ID | tr [A-Z] [a-z])
+        case $os_tmp in
+                ubuntu|debian)
                 os='ubuntu'
                 ;;
                 centos)
@@ -268,8 +269,8 @@ install() {
                                 update-rc.d ss-fly defaults
                                 ;;
                         'centos')
-                                chkconfig -add ss-fly
-                                shkconfig ss-fly on  
+                                chkconfig --add ss-fly
+                                chkconfig ss-fly on
                                 ;;
                 esac            
                 ssserver -c /etc/shadowsocks.json -d start
