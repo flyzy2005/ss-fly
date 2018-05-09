@@ -143,6 +143,16 @@ install_bbr() {
 }
 
 install_ssr() {
+        check_os
+        case $os in
+                'ubuntu'|'debian')
+		     apt-get -y update
+                     apt-get -y install wget
+                     ;;
+                'centos')
+                     yum install -y wget
+                     ;;
+        esac
 	wget --no-check-certificate https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocksR.sh
 	chmod +x shadowsocksR.sh
 	./shadowsocksR.sh 2>&1 | tee shadowsocksR.log
