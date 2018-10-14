@@ -11,5 +11,7 @@
 	ss-fly.sh -uninstall
     一键安装ssr:
 	ss-fly.sh -ssr
+    显示ss链接:
+        ss-fly.sh -sslink
     安装BBR加速：
         ss-fly.sh -bbr

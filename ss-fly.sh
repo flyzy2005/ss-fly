@@ -448,7 +448,8 @@ install() {
         echo -e "你的密码            ：\033[41;37m ${password} \033[0m"
         echo -e "你的端口            ：\033[41;37m ${port} \033[0m"
         echo -e "你的加密方式        ：\033[41;37m aes-256-cfb \033[0m"
-        echo -e "欢迎访问flyzy小站   ：\033[41;37m https://www.flyzy2005.com \033[0m"                   
+        echo -e "欢迎访问flyzy小站   ：\033[41;37m https://www.flyzy2005.com \033[0m"
+        get_ss_link
 }
 
 cleanup() {
@@ -461,6 +462,19 @@ get_ip(){
     [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
     [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipinfo.io/ip )
     [ ! -z ${IP} ] && echo ${IP} || echo
+}
+
+get_ss_link(){
+    if [ ! -f "/etc/shadowsocks.json" ]; then
+        echo 'shdowsocks配置文件不存在，请检查（/etc/shadowsocks.json）'
+        exit 1
+    fi
+    local tmp=$(echo -n "`get_config_value method`:`get_config_value password`@`get_ip`:`get_config_value server_port`" | base64 -w0)
+    echo -e "你的ss链接：\033[41;37m ss://${tmp} \033[0m"
+}
+
+get_config_value(){
+    cat /etc/shadowsocks.json | grep "\"$1\":"|awk -F ":" '{print $2}'| sed 's/\"//g;s/,//g;s/ //g'
 }
 
 if [ "$#" -eq 0 ]; then
@@ -497,6 +511,9 @@ case $1 in
 	-uninstall )
 		uninstall_ss
 		;;
+        -sslink )
+                get_ss_link
+                ;;
 	* )
 		usage
 		;;
