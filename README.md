@@ -20,6 +20,8 @@ Ubuntu 12+
 
 一键搭建V2Ray：[一键脚本搭建V2Ray+配置与优化](https://www.flyzy2005.com/v2ray/how-to-build-v2ray/)
 
+或者参考：[Wiki](https://github.com/flyzy2005/ss-fly/wiki)
+
 ## 推荐的VPS
 [Vultr优惠网](https://www.vultryhw.com/)
 
