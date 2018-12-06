@@ -26,3 +26,8 @@ Ubuntu 12+
 [Vultr优惠网](https://www.vultryhw.com/)
 
 [搬瓦工优惠网](https://www.bwgyhw.com/)
+
+## 交流群
+flyzy小站交流群：http://t.me/flyzyxiaozhan
+
+搬瓦工用户交流群：https://t.me/banwagongusers
