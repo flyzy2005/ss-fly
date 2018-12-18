@@ -31,3 +31,21 @@ Ubuntu 12+
 flyzy小站交流群：http://t.me/flyzyxiaozhan
 
 搬瓦工用户交流群：https://t.me/banwagongusers
+
+yum -y install git
+git clone https://github.com/flyzy2005/ss-fly
+ss-fly/ss-fly.sh -ssr
+打开BBR
+wget -N --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh && chmod +x bbr.sh && bash bbr.sh
+判断打开BBR成功
+sysctl net.ipv4.tcp_available_congestion_control
+显示
+net.ipv4.tcp_available_congestion_control = bbr cubic reno 
+里面有bbr就行了
+启动：/etc/init.d/shadowsocks start
+停止：/etc/init.d/shadowsocks stop
+重启：/etc/init.d/shadowsocks restart
+状态：/etc/init.d/shadowsocks status
+配置文件路径：/etc/shadowsocks.json
+日志文件路径：/var/log/shadowsocks.log
+代码安装目录：/usr/local/shadowsocks
