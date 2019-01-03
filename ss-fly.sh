@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2018 flyzy小站
+# Copyright (c) 2018 dhfjl
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -7,15 +7,15 @@ yellow='\033[0;33m'
 plain='\033[0m'
 
 os='ossystem'
-password='flyzy2005.com'
-port='1024'
-libsodium_file="libsodium-1.0.16"
-libsodium_url="https://github.com/jedisct1/libsodium/releases/download/1.0.16/libsodium-1.0.16.tar.gz"
+password='AboutShawn312394'
+port='5785'
+libsodium_file="libsodium-1.0.17"
+libsodium_url="https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz"
 
 fly_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-kernel_ubuntu_url="http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.2/linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb"
-kernel_ubuntu_file="linux-image-4.10.2-041002-generic_4.10.2-041002.201703120131_amd64.deb"
+kernel_ubuntu_url="http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.20/linux-headers-4.20.0-042000-generic_4.20.0-042000.201812232030_amd64.deb"
+kernel_ubuntu_file="linux-headers-4.20.0-042000-generic_4.20.0-042000.201812232030_amd64.deb"
 
 usage () {
         cat $fly_dir/sshelp
@@ -322,7 +322,7 @@ download_files() {
                 echo -e "[${red}错误${plain}] 下载${libsodium_file}.tar.gz失败!"
                 exit 1
         fi
-        if ! wget --no-check-certificate -O shadowsocks-master.zip https://github.com/shadowsocks/shadowsocks/archive/master.zip
+        if ! wget --no-check-certificate -O shadowsocks-master.zip https://github.com/shadowsocks/shadowsocks-libev/archive/master.zip
         then
                 echo -e "[${red}错误${plain}] shadowsocks安装包文件下载失败！"
                 exit 1
