@@ -23,7 +23,7 @@ Ubuntu 12+
 或者参考：[Wiki](https://github.com/flyzy2005/ss-fly/wiki)
 
 ## 推荐的VPS
-[Vultr优惠网](https://www.vultryhw.com/)
+[Vultr优惠网](https://www.vultryhw.cn/)
 
 [搬瓦工优惠网](https://www.bwgyhw.com/)
 
