@@ -25,7 +25,7 @@ Ubuntu 12+
 ## 推荐的VPS
 [Vultr优惠网](https://www.vultryhw.cn/)
 
-[搬瓦工优惠网](https://www.bwgyhw.com/)
+[搬瓦工优惠网](https://www.bwgyhw.cn/)
 
 ## 交流群
 flyzy小站交流群：http://t.me/flyzyxiaozhan
